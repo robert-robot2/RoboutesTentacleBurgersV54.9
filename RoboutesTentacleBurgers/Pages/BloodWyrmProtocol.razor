@@ -1,0 +1,225 @@
+﻿@page "/BloodWyrmProtocol"
+
+<PageTitle>Blood Wyrm Protocol</PageTitle>
+<div class="DiabloBlueGlow" style="font-size:150%">BloodWyrmProtocol</div>
+
+<div class="DiabloRedGlow" style="font-size:125%">
+  Errors Game Under Maintenence for Gamepad and Fixes<br/>
+    "ERRORS — KNOWN ISSUES PENDING:",<br />
+    "Error 1: Race condition on movement and attacks still persists on both keyboard and gamepad input.",<br />
+    "Error 2: Gamepad attacks fire too fast and do not match the timing sync of keyboard input.",<br />
+    "Error 3: Animations are breaking on key input after using Gamepad"<br />
+</div>
+@using BWP
+<BloodWyrmProtocol2 />
+
+@inject BloodWyrmService Game
+@inject BloodWaveReg WaveReg
+@inject NavigationManager NavManager
+
+<div class="bloodwyrm-shell"
+     @onkeydown="Input.HandleKeyDown"
+     @onkeyup="Input.HandleKeyUp"
+     @onmousedown="Input.HandleMouseDown"
+     @onmouseup="Input.HandleMouseUp"
+     @onmousemove="Input.HandleMouseMove"
+     @oncontextmenu:preventDefault="true"
+     tabindex="0">
+
+    @if (Game.showGameMenu)
+    {
+        <BloodGameMenu OnSectChar="Game.HandleCharSelect" OnOptions="Game.HandleOptions" OnControls="Game.HandleControls" OnQuit="Game.HandleQuit" />
+    }
+    @if (Game.showOptionsMenu)
+    {
+        <BloodOptionsMenu Lighting="Lighting" OnRMainMenu="Game.HandleRMainMenu" />
+    }
+    @if (Game.showControlsMenu)
+    {
+        <BloodControlsMenu OnRMainMenu="Game.HandleRMainMenu" />
+    }
+    @if (Game.showCharacterMenu)
+    {
+        <BloodCharacterSelectMenu OnStart="Game.HandleStart" OnRMainMenu="Game.HandleRMainMenu" OnCharacterSelected="HandleCharacterSelected" />
+    }
+    @if (Game.showInventoryMenu)
+    {
+        <BloodInventory OnInv="Game.HandleInv" CharacterHandle="CharacterHandle" />
+    }
+
+    <!-- Char Hud -->
+
+    <BloodCharHudRender Lighting="Lighting" CharacterHandle="CharacterHandle" />
+
+    <!-- Map BG Viewport-->
+
+    <div class="bloodwyrm-map" style="left:@Game.ViewportXpx; top:@Game.ViewportYpx;">
+
+
+        <!-- Map BG -->
+
+        <img src="/iAssets/GrassMap0022k.png" class="bloodwyrm-bg" />
+
+        <!-- Map Compass -->
+
+
+        <div style="position:absolute; z-index:500; top:10px; left:50%; transform:translateX(-50%);">
+            <button class="glow-buttonmap" @onclick='() => NavManager.NavigateTo("/BloodForest1010")'>North</button>
+        </div>
+        @*
+        <div style="position:absolute; z-index:500; bottom:75px; left:50%; transform:translateX(-50%);">
+            <button class="glow-buttonmap" @onclick='() => Game.TransitionTo("South")'>South</button>
+        </div>
+
+        <div style="position:absolute;z-index:500;  top:50%; right:200px; transform:translateY(-50%);">
+            <button class="glow-buttonmap" @onclick='() => Game.TransitionTo("East")'>East</button>
+        </div>
+        *@
+        <div style="position:absolute;z-index:500;  top:50%; left:10px; transform:translateY(-50%);">
+            <button class="glow-buttonmap" @onclick='() => NavManager.NavigateTo("/BloodTownMap")'>West</button>
+        </div>
+
+        <div style="position:absolute;z-index:500; top:1600px; right:1200px; transform:translateY(-50%);">
+            <button class="glow-buttonmap" @onclick='() => NavManager.NavigateTo("/BloodCaveSys1")'>Caves</button>
+        </div>
+
+        <!-- single composite handle parameter as requested -->
+        <BloodGame allHandle="allhandles" />
+
+        <!-- Static Sets -->
+        @foreach (var obj in BloodStaticObject.BloodStaticRegistry.All)
+        {
+            <div style="@obj.SpriteStyle"></div>
+        }
+    </div>
+</div>
+
+
+<script>
+    window.BloodInputAPI = {
+        dotNetRef: null,
+        gamepadPolling: false,
+        rafId: null,
+        deadZone: 0.15,
+
+        init: function(dotNetReference) {
+            console.log('[BWP-GP] init() called! dotNetRef is:', dotNetReference ? 'VALID' : 'NULL');
+            this.dotNetRef = dotNetReference;
+            this.registerFullscreenListener();
+            this.startGamepadPolling();
+        },
+
+        registerFullscreenListener: function() {
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement) {
+                    console.log('[BloodInput] Exited fullscreen');
+                }
+            });
+        },
+
+        startGamepadPolling: function() {
+            if (this.gamepadPolling) return;
+            this.gamepadPolling = true;
+            console.log('[BWP-GP] Gamepad polling started');
+            const poll = () => {
+                if (!this.gamepadPolling) return;
+                this.updateGamepad();
+                this.rafId = requestAnimationFrame(poll);
+            };
+            poll();
+        },
+
+        stopGamepadPolling: function() {
+            this.gamepadPolling = false;
+            if (this.rafId) {
+                cancelAnimationFrame(this.rafId);
+                this.rafId = null;
+            }
+        },
+
+        updateGamepad: function() {
+            const gamepads = navigator.getGamepads();
+
+            if (!window._bwpFrameCount) window._bwpFrameCount = 0;
+            window._bwpFrameCount++;
+            if (window._bwpFrameCount % 180 === 0) {
+                console.log('[BWP-GP] rAF loop alive, frame:', window._bwpFrameCount);
+            }
+
+            let gamepad = null;
+            for (let i = 0; i < gamepads.length; i++) {
+                if (gamepads[i]) { gamepad = gamepads[i]; break; }
+            }
+
+            if (window._bwpFrameCount % 180 === 0) {
+                console.log('[BWP-GP] Gamepad found:', gamepad ? gamepad.id : 'NULL - nothing connected');
+            }
+
+            if (!gamepad) return;
+
+            if (!this.dotNetRef) {
+                if (window._bwpFrameCount % 180 === 0) {
+                    console.warn('[BWP-GP] dotNetRef is NULL');
+                }
+                return;
+            }
+
+            const anyPressed = gamepad.buttons.some(b => b.pressed);
+            if (anyPressed) {
+                console.log('[BWP-GP] Button pressed!',
+                    gamepad.buttons.map((b,i) => b.pressed ? i : null).filter(x => x !== null));
+            }
+
+            const applyDeadZone = (value) => Math.abs(value) < this.deadZone ? 0 : value;
+
+            const state = {
+                leftStickX: applyDeadZone(gamepad.axes[0] || 0),
+                leftStickY: applyDeadZone(gamepad.axes[1] || 0),
+                rightStickX: applyDeadZone(gamepad.axes[2] || 0),
+                rightStickY: applyDeadZone(gamepad.axes[3] || 0),
+                buttonA: gamepad.buttons[0]?.pressed || false,
+                buttonB: gamepad.buttons[1]?.pressed || false,
+                buttonX: gamepad.buttons[2]?.pressed || false,
+                buttonY: gamepad.buttons[3]?.pressed || false,
+                leftBumper: gamepad.buttons[4]?.pressed || false,
+                rightBumper: gamepad.buttons[5]?.pressed || false,
+                leftTrigger: gamepad.buttons[6]?.value || 0,
+                rightTrigger: gamepad.buttons[7]?.value || 0,
+                buttonBack: gamepad.buttons[8]?.pressed || false,
+                buttonStart: gamepad.buttons[9]?.pressed || false,
+                leftStickButton: gamepad.buttons[10]?.pressed || false,
+                rightStickButton: gamepad.buttons[11]?.pressed || false,
+                dpadUp: gamepad.buttons[12]?.pressed || false,
+                dpadDown: gamepad.buttons[13]?.pressed || false,
+                dpadLeft: gamepad.buttons[14]?.pressed || false,
+                dpadRight: gamepad.buttons[15]?.pressed || false
+            };
+
+            if (anyPressed) {
+                console.log('[BWP-GP] Calling invokeMethodAsync...');
+            }
+
+            this.dotNetRef.invokeMethodAsync('UpdateGamepadState', state)
+                .catch(err => console.error('[BWP-GP] invokeMethodAsync FAILED:', err));
+        },
+
+        dispose: function() {
+            this.stopGamepadPolling();
+            this.dotNetRef = null;
+        }
+    };
+
+    window.addEventListener('gamepadconnected', (e) => {
+        console.log('[BWP-GP] Gamepad connected:', e.gamepad.id);
+    });
+
+    window.addEventListener('gamepaddisconnected', (e) => {
+        console.log('[BWP-GP] Gamepad disconnected:', e.gamepad.id);
+    });
+
+    document.addEventListener('contextmenu', (e) => {
+        if (e.target.closest('.bloodwyrm-shell')) {
+            e.preventDefault();
+        }
+    });
+</script>

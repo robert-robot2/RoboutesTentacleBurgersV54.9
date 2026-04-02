@@ -1,0 +1,31 @@
+﻿
+
+
+
+
+<!-- Weather -->
+@if (Weather.IsFogEnabled)
+{
+    <div style="@Weather.FogStyle"></div>
+}
+
+@foreach (var particle in Weather.GetActiveParticles())
+{
+    <img src="@particle.Texture"
+         style="position:absolute; left:@(particle.X + "px"); top:@(particle.Y + "px"); width:@(particle.Width + "px"); height:@(particle.Height + "px"); opacity:@(particle.Opacity); z-index:8500; pointer-events:none;" />
+
+}
+
+
+
+
+
+
+
+
+
+
+
+@code {
+    [Parameter] public IWeather Weather { get; set; } = default!;
+}

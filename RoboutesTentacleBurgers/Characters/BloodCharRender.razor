@@ -1,0 +1,38 @@
+﻿
+
+@if (ActiveCharacter is not null)
+{
+    @if (ActiveCharacter.CharIsAlive && ActiveCharacter.CharHungerCurrent > 0)
+    {
+        <div style=@($"{ActiveCharacter.CharSpriteStyle}" +
+                  (!string.IsNullOrEmpty(ActiveCharacter.CharHitEffectPath)
+                  ? " filter:brightness(150%) saturate(200%);"
+                  : ""))></div>
+        @if (!string.IsNullOrEmpty(ActiveCharacter.CharHitEffectPath))
+        {
+            <img src="@ActiveCharacter.CharHitEffectPath"
+                 style=@($"position:absolute; left:{ActiveCharacter.CharX}px; top:{ActiveCharacter.CharY}px; z-index:80;") />
+        }
+
+        @foreach (var puddle in BloodSplatterRegistry.All)
+        {
+            <img src="@puddle.Path"
+                 style="position:absolute; left:@puddle.Xpx; top:@puddle.Ypx; width:@puddle.Widthpx; height:@puddle.Heightpx; z-index:40;" />
+        }
+    }
+    else
+    {
+        <img src="/iAssets/WarriorCooled01.png"
+             style=@($"position:absolute; left:{ActiveCharacter.CharX}px; top:{ActiveCharacter.CharY}px; opacity:0.4; filter:grayscale(100%); z-index:52;") />
+    }
+}
+
+
+
+@code {
+    // Accept the parent's handle; do not 'new' here; must have public setter
+    [Parameter] public BloodCharacterHandle? CharacterHandle { get; set; }
+
+    // Proxy for markup
+    public IBloodiCharacter? ActiveCharacter => CharacterHandle?.ActiveCharacter;
+}

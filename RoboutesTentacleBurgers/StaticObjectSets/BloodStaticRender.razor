@@ -1,0 +1,24 @@
+﻿
+
+
+
+
+
+
+
+
+
+
+
+@foreach (var registry in BloodStaticHandle.AllRegistries.Where(r => r != null))
+{
+    foreach (var obj in registry)
+    {
+        <div style="@obj.StaticImagePath"></div>
+    }
+}
+
+@code {
+    [Parameter] public BloodStaticHandle? StaticHandle { get; set; }
+    public IStatic? ActiveStatic => StaticHandle?.ActiveStatic;
+}

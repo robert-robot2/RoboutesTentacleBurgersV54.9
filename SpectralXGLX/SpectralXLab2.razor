@@ -1,0 +1,538 @@
+﻿@page "/SpectralXLab"
+<PageTitle>SpectralXLab</PageTitle>
+<div class="DiabloBlueGlow" style="font-size:150%">SpectralXLab</div>
+
+
+<!-- Render viewport -->
+<div id="RenderSurface"
+     style="width:800px; height:600px; background-color:black; position:relative; perspective:800px;">
+    @((MarkupString)(_rectangleOutput
+        + _cubeOutput
+        + _lightOutput
+        + _flashOutput
+        + _starsOutput
+        + _orbsOutput))
+    <div class="control-panel">
+        <button @onclick="RunRectangleTest">Run Rectangle Test</button>
+        <button @onclick="RunCubeTest">Run Cube Test</button>
+        <button @onclick="ToggleLight">Toggle Point Light</button>
+        <button @onclick="MoveLightLeft">Light ←</button>
+        <button @onclick="MoveLightRight">Light →</button>
+        <button @onclick="MoveLightUp">Light ↑</button>
+        <button @onclick="MoveLightDown">Light ↓</button>
+        <button @onclick="ToggleFlashingLights">Toggle Flashing Lights</button>
+        <button @onclick="ToggleStars">Toggle Stars</button>
+        <button @onclick="ToggleOrbs">Toggle Orbs</button>
+        <button @onclick="SurpriseMode">Surprise Mode!</button>
+        <button @onclick="ClearScene">Clear Scene</button>
+    </div>
+</div>
+
+
+@*
+
+
+<div class="DiabloBlueGlow" style="font-size:150%">FullScreen Toggle on lower right Viewport hover and Vice Versa</div>
+<div class="DiabloBlueGlow" style="font-size:150%">Press 3 to show Debug</div>
+<div class="DiabloBlueGlow" style="font-size:150%">WASD for Camera Movement</div>
+
+
+
+
+<div id="SpectralX-Viewport"
+     class="SpectralX-Viewport"
+     style="@Viewport.Style"
+     tabindex="0"
+     @onkeydown="Input.HandleKeyDown">
+
+    <SpectralXDebugRender Input="Input" Engine="Engine" Camera="Camera" Viewport="Viewport"Renderer="Renderer"Scene="Scene" MeshLibrary="MeshLibrary"/>
+
+
+
+
+    <button class="fullscreen-toggle" @onclick="ToggleViewport">
+        @ToggleIcon
+    </button>
+    @if (Viewport.RenderedTriangles.Count > 0)
+    {
+        <svg width="@Viewport.ViewportWidth" height="@Viewport.ViewportHeight"
+             style="position:absolute; top:0; left:0; pointer-events:none;">
+            @foreach (var tri in Viewport.RenderedTriangles)
+            {
+                <polygon points="@($"{tri.P0.X},{tri.P0.Y} {tri.P1.X},{tri.P1.Y} {tri.P2.X},{tri.P2.Y}")"
+                         fill="rgba(100,150,255,0.5)"
+                         stroke="cyan"
+                         stroke-width="1" />
+            }
+        </svg>
+    }
+
+
+    <!-- 
+    <div class="cube placeholder">
+        <div class="face front"></div>
+        <div class="face back"></div>
+        <div class="face right"></div>
+        <div class="face left"></div>
+        <div class="face top"></div>
+        <div class="face bottom"></div>
+    </div>
+    ALWAYS show test cube -->
+ 
+    @if (Renderer.CurrentMesh != null)
+    {
+       
+        <!-- optional: separate indicator cube for FBX -->
+        <div class="cube fbx" style="left:120px;">
+            <div class="face front"></div>
+            <div class="face back"></div>
+            <div class="face right"></div>
+            <div class="face left"></div>
+            <div class="face top"></div>
+            <div class="face bottom"></div>
+        </div>
+    }
+  
+</div>
+ *@
+
+
+
+
+@code {
+    private string _rectangleOutput = string.Empty;
+    private string _cubeOutput = string.Empty;
+    private string _lightOutput = string.Empty;
+    private string _flashOutput = string.Empty;
+    private string _starsOutput = string.Empty;
+    private string _orbsOutput = string.Empty;
+
+    private System.Timers.Timer? _rectTimer;
+    private System.Timers.Timer? _cubeTimer;
+    private System.Timers.Timer? _flashTimer;
+    private System.Timers.Timer? _starsTimer;
+    private System.Timers.Timer? _orbsTimer;
+
+    private double _rectAngle = 0;
+    private double _cubeAngle = 0;
+
+    private bool _lightOn = false;
+    private bool _flashingOn = false;
+    private bool _starsOn = false;
+    private bool _orbsOn = false;
+
+    // Light position and radius
+    private int _lightX = 650;
+    private int _lightY = 280;
+    private double _lightRadius = 200; // pixels
+
+    private System.Diagnostics.Stopwatch _stopwatchRect = new();
+    private System.Diagnostics.Stopwatch _stopwatchCube = new();
+
+    private void RunRectangleTest()
+    {
+        _stopwatchRect.Restart();
+        _rectTimer = new System.Timers.Timer(16);
+        _rectTimer.Elapsed += (s, e) =>
+        {
+            var elapsed = _stopwatchRect.Elapsed.TotalSeconds;
+            _stopwatchRect.Restart();
+
+            _rectAngle += 90 * elapsed;
+            if (_rectAngle >= 360) _rectAngle -= 360;
+
+            _rectangleOutput = $@"
+        <div style='
+        width:100px;
+        height:50px;
+        background-color:red;
+        position:absolute;
+        top:275px;
+        left:200px;
+        transform:rotate({_rectAngle}deg);
+        transform-origin:center;'>
+        </div>";
+
+            InvokeAsync(StateHasChanged);
+        };
+        _rectTimer.Start();
+    }
+
+    private void RunCubeTest()
+    {
+        _stopwatchCube.Restart();
+        _cubeTimer = new System.Timers.Timer(16);
+        _cubeTimer.Elapsed += (s, e) =>
+        {
+            var elapsed = _stopwatchCube.Elapsed.TotalSeconds;
+            _stopwatchCube.Restart();
+
+            _cubeAngle += 60 * elapsed;
+            if (_cubeAngle >= 360) _cubeAngle -= 360;
+
+            int cubeX = 550;
+            int cubeY = 300;
+            double dx = _lightX - cubeX;
+            double dy = _lightY - cubeY;
+            double dist = Math.Sqrt(dx * dx + dy * dy);
+
+            double intensity = 0;
+            if (_lightOn && dist < _lightRadius)
+                intensity = 1.0 - (dist / _lightRadius);
+
+            string shade = $"rgba(255,255,255,{intensity * 0.6})";
+
+            _cubeOutput = $@"
+        <div style='
+        width:100px;
+        height:100px;
+        position:absolute;
+        top:250px;
+        left:500px;
+        transform-style:preserve-3d;
+        transform:rotateY({_cubeAngle}deg) rotateX({_cubeAngle / 2}deg);'>
+
+        <div style='position:absolute; width:100px; height:100px; background:linear-gradient({shade}, blue); transform:translateZ(50px);'></div>
+        <div style='position:absolute; width:100px; height:100px; background:linear-gradient({shade}, green); transform:rotateY(180deg) translateZ(50px);'></div>
+        <div style='position:absolute; width:100px; height:100px; background:linear-gradient({shade}, yellow); transform:rotateY(90deg) translateZ(50px);'></div>
+        <div style='position:absolute; width:100px; height:100px; background:linear-gradient({shade}, purple); transform:rotateY(-90deg) translateZ(50px);'></div>
+        <div style='position:absolute; width:100px; height:100px; background:linear-gradient({shade}, orange); transform:rotateX(90deg) translateZ(50px);'></div>
+        <div style='position:absolute; width:100px; height:100px; background:linear-gradient({shade}, pink); transform:rotateX(-90deg) translateZ(50px);'></div>
+        </div>";
+
+            _lightOutput = _lightOn
+            ? $@"<div style='
+        width:{_lightRadius * 2}px;
+        height:{_lightRadius * 2}px;
+        background:radial-gradient(circle,
+        rgba(255,255,0,0.8) 0%,
+        rgba(255,255,0,0.4) 40%,
+        rgba(0,0,0,0.0) 100%);
+        border-radius:50%;
+        position:absolute;
+        top:{_lightY - _lightRadius}px;
+        left:{_lightX - _lightRadius}px;
+        filter:blur(40px);
+        pointer-events:none;'>
+        </div>
+        <div style='
+        width:30px;
+        height:30px;
+        background:radial-gradient(circle, white, yellow);
+        border-radius:50%;
+        position:absolute;
+        top:{_lightY}px;
+        left:{_lightX}px;
+        box-shadow:0 0 40px yellow;'>
+        </div>"
+            : string.Empty;
+
+            InvokeAsync(StateHasChanged);
+        };
+        _cubeTimer.Start();
+    }
+
+    // Flashing lights
+    private void ToggleFlashingLights()
+    {
+        _flashingOn = !_flashingOn;
+        if (_flashingOn)
+        {
+            _flashTimer = new System.Timers.Timer(500); // half-second flash
+            _flashTimer.Elapsed += (s, e) =>
+            {
+                var rnd = new Random();
+                string color = $"rgb({rnd.Next(256)},{rnd.Next(256)},{rnd.Next(256)})";
+                _flashOutput = $@"<div style='
+        width:800px;
+        height:600px;
+        background-color:{color};
+        opacity:0.2;
+        position:absolute;
+        top:0;
+        left:0;'>
+        </div>";
+                InvokeAsync(StateHasChanged);
+            };
+            _flashTimer.Start();
+        }
+        else
+        {
+            _flashTimer?.Stop();
+            _flashOutput = string.Empty;
+        }
+    }
+
+    // Glowy stars
+    private void ToggleStars()
+    {
+        _starsOn = !_starsOn;
+        if (_starsOn)
+        {
+            _starsTimer = new System.Timers.Timer(1000);
+            _starsTimer.Elapsed += (s, e) =>
+            {
+                var rnd = new Random();
+                _starsOutput = string.Empty;
+                for (int i = 0; i < 20; i++)
+                {
+                    int x = rnd.Next(800);
+                    int y = rnd.Next(600);
+                    _starsOutput += $@"<div style='
+        width:4px;
+        height:4px;
+        background:white;
+        border-radius:50%;
+        position:absolute;
+        top:{y}px;
+        left:{x}px;
+        box-shadow:0 0 10px white;'>
+        </div>";
+                }
+                InvokeAsync(StateHasChanged);
+            };
+            _starsTimer.Start();
+        }
+        else
+        {
+            _starsTimer?.Stop();
+            _starsOutput = string.Empty;
+        }
+    }
+    // Colored orbs
+    private void ToggleOrbs()
+    {
+        _orbsOn = !_orbsOn;
+        if (_orbsOn)
+        {
+            _orbsTimer = new System.Timers.Timer(800); // update every ~0.8s
+            _orbsTimer.Elapsed += (s, e) =>
+            {
+                var rnd = new Random();
+                _orbsOutput = string.Empty;
+
+                // spawn 5 glowing orbs
+                for (int i = 0; i < 5; i++)
+                {
+                    int x = rnd.Next(700); // keep inside viewport
+                    int y = rnd.Next(500);
+                    string color = $"rgba({rnd.Next(256)},{rnd.Next(256)},{rnd.Next(256)},0.8)";
+
+                    _orbsOutput += $@"<div style='
+        width:40px;
+        height:40px;
+        background:{color};
+        border-radius:50%;
+        position:absolute;
+        top:{y}px;
+        left:{x}px;
+        box-shadow:0 0 30px {color};
+        animation:pulse 1.5s infinite alternate;'>
+        </div>";
+                }
+
+                // add CSS animation for pulsing glow
+                _orbsOutput += @"<style>
+        @keyframes pulse {
+        from { transform:scale(1); opacity:0.6; }
+        to   { transform:scale(1.3); opacity:1; }
+        }
+        </style>";
+
+                InvokeAsync(StateHasChanged);
+            };
+            _orbsTimer.Start();
+        }
+        else
+        {
+            _orbsTimer?.Stop();
+            _orbsOutput = string.Empty;
+        }
+
+
+
+
+    }
+    // Surprise Mode with randomized timing
+    private void SurpriseMode()
+    {
+        var rnd = new Random();
+
+        // Reset everything first
+        _flashTimer?.Stop(); _flashOutput = string.Empty; _flashingOn = false;
+        _starsTimer?.Stop(); _starsOutput = string.Empty; _starsOn = false;
+        _orbsTimer?.Stop(); _orbsOutput = string.Empty; _orbsOn = false;
+
+        // Random toggles
+        bool enableFlashing = rnd.Next(2) == 0;
+        bool enableStars = rnd.Next(2) == 0;
+        bool enableOrbs = rnd.Next(2) == 0;
+
+        // Flashing lights with random speed
+        if (enableFlashing)
+        {
+            _flashingOn = true;
+            int flashInterval = rnd.Next(200, 1000); // between 0.2s and 1s
+            _flashTimer = new System.Timers.Timer(flashInterval);
+            _flashTimer.Elapsed += (s, e) =>
+            {
+                string color = $"rgb({rnd.Next(256)},{rnd.Next(256)},{rnd.Next(256)})";
+                _flashOutput = $@"<div style='
+        width:800px;
+        height:600px;
+        background-color:{color};
+        opacity:0.2;
+        position:absolute;
+        top:0;
+        left:0;'>
+        </div>";
+                InvokeAsync(StateHasChanged);
+            };
+            _flashTimer.Start();
+        }
+
+        // Stars with random twinkle speed
+        if (enableStars)
+        {
+            _starsOn = true;
+            int starInterval = rnd.Next(500, 2000); // between 0.5s and 2s
+            _starsTimer = new System.Timers.Timer(starInterval);
+            _starsTimer.Elapsed += (s, e) =>
+            {
+                _starsOutput = string.Empty;
+                for (int i = 0; i < 20; i++)
+                {
+                    int x = rnd.Next(800);
+                    int y = rnd.Next(600);
+                    _starsOutput += $@"<div style='
+        width:4px;
+        height:4px;
+        background:white;
+        border-radius:50%;
+        position:absolute;
+        top:{y}px;
+        left:{x}px;
+        box-shadow:0 0 10px white;
+        animation:twinkle {rnd.Next(1, 3)}s infinite alternate;'>
+        </div>";
+                }
+                _starsOutput += @"<style>
+        @keyframes twinkle {
+        from { opacity:0.3; }
+        to   { opacity:1; }
+        }
+        </style>";
+                InvokeAsync(StateHasChanged);
+            };
+            _starsTimer.Start();
+        }
+
+        // Orbs with random pulse speed
+        if (enableOrbs)
+        {
+            _orbsOn = true;
+            int orbInterval = rnd.Next(600, 1500); // between 0.6s and 1.5s
+            _orbsTimer = new System.Timers.Timer(orbInterval);
+            _orbsTimer.Elapsed += (s, e) =>
+            {
+                _orbsOutput = string.Empty;
+                for (int i = 0; i < 5; i++)
+                {
+                    int x = rnd.Next(700);
+                    int y = rnd.Next(500);
+                    string color = $"rgba({rnd.Next(256)},{rnd.Next(256)},{rnd.Next(256)},0.8)";
+                    int pulseSpeed = rnd.Next(1, 3); // 1–2s pulse
+                    _orbsOutput += $@"<div style='
+        width:40px;
+        height:40px;
+        background:{color};
+        border-radius:50%;
+        position:absolute;
+        top:{y}px;
+        left:{x}px;
+        box-shadow:0 0 30px {color};
+        animation:pulse {pulseSpeed}s infinite alternate;'>
+        </div>";
+                }
+                _orbsOutput += @"<style>
+        @keyframes pulse {
+        from { transform:scale(1); opacity:0.6; }
+        to   { transform:scale(1.3); opacity:1; }
+        }
+        </style>";
+                InvokeAsync(StateHasChanged);
+            };
+            _orbsTimer.Start();
+        }
+
+        // Bonus chaos orb
+        if (rnd.Next(3) == 0)
+        {
+            int x = rnd.Next(700);
+            int y = rnd.Next(500);
+            string color = $"rgba({rnd.Next(256)},{rnd.Next(256)},{rnd.Next(256)},0.9)";
+            _orbsOutput += $@"<div style='
+        width:60px;
+        height:60px;
+        background:{color};
+        border-radius:50%;
+        position:absolute;
+        top:{y}px;
+        left:{x}px;
+        box-shadow:0 0 50px {color};
+        animation:pulse {rnd.Next(1, 2)}s infinite alternate;'>
+        </div>";
+        }
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ToggleLight() => _lightOn = !_lightOn;
+
+    private void MoveLightLeft() { _lightX -= 20; }
+    private void MoveLightRight() { _lightX += 20; }
+    private void MoveLightUp() { _lightY -= 20; }
+    private void MoveLightDown() { _lightY += 20; }
+
+    private void ClearScene()
+    {
+        // Stop + dispose timers
+        _rectTimer?.Stop();
+        _rectTimer?.Dispose();
+        _rectTimer = null;
+
+        _cubeTimer?.Stop();
+        _cubeTimer?.Dispose();
+        _cubeTimer = null;
+
+        _flashTimer?.Stop(); _flashTimer?.Dispose(); _flashTimer = null;
+        _starsTimer?.Stop(); _starsTimer?.Dispose(); _starsTimer = null;
+        _orbsTimer?.Stop(); _orbsTimer?.Dispose(); _orbsTimer = null;
+
+        // Reset angles
+        _rectAngle = 0;
+        _cubeAngle = 0;
+
+        // Clear outputs
+        _rectangleOutput = string.Empty;
+        _cubeOutput = string.Empty;
+        _lightOutput = string.Empty;
+        _flashOutput = string.Empty;
+        _starsOutput = string.Empty;
+        _orbsOutput = string.Empty;
+
+        // Reset flags
+        _lightOn = false;
+        _flashingOn = false;
+        _starsOn = false;
+        _orbsOn = false;
+
+        InvokeAsync(StateHasChanged);
+    }
+
+
+
+}
+
+
+

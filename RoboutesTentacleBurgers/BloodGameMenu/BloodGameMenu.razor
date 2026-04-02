@@ -1,0 +1,119 @@
+﻿@inject NavigationManager NavManager
+
+@inject BloodWyrmService Game
+@inject BloodCharacterHandle CharacterHandle
+
+
+
+<!-- HUD -->
+<div class="bloodwyrm-title">
+    Blood Wyrm Protocol<br />
+
+
+</div>
+
+<!-- HUD -->
+<div class="bloodwyrm-fire">
+
+
+    <img src="/iAssets/DiabloTitle005.png" style="@GetSpriteStyle()" />
+</div>
+
+<button class="glow-button" @onclick="OnSectCharPressed">Single Player</button>
+<button class="glow-button2" @onclick="OnOptionsPressed">Options</button>
+<button class="glow-button3" @onclick="OnControlsPressed">Controls</button>
+<button class="glow-button4" @onclick="OnQuitPressed">Quit</button>
+
+@code {
+   
+
+    [Parameter] public EventCallback OnSectChar { get; set; }
+    [Parameter] public EventCallback OnOptions { get; set; }
+    [Parameter] public EventCallback OnControls { get; set; }
+    [Parameter] public EventCallback OnQuit{ get; set; }
+
+    
+    private async Task OnSectCharPressed()
+    {
+        await OnSectChar.InvokeAsync();
+        CharacterHandle.HasSpawned = false;
+         NavManager.NavigateTo("/BloodWyrmProtocol");
+
+
+    }
+     
+  
+
+    private async Task OnOptionsPressed()
+    {
+        await OnOptions.InvokeAsync();
+
+
+    }
+    private async Task OnControlsPressed()
+    {
+        await OnControls.InvokeAsync();
+
+
+    }
+    private async Task OnQuitPressed()
+    {
+        await OnQuit.InvokeAsync();
+    }
+
+
+
+
+
+
+    @code {
+    private int frameWidth = 552;       // Native frame width
+    private int frameHeight = 216;      // Native frame height
+    private int totalFrames = 10;
+    private int currentFrame = 0;
+    private int frameDurationMs = 100;
+    private System.Timers.Timer frameTimer;
+
+    // ✅ Independent scaling for X and Y
+    private double scaleX = 0.9;        // Horizontal zoom
+    private double scaleY = 0.25;        // Vertical zoom
+
+    protected override void OnInitialized()
+    {
+        frameTimer = new System.Timers.Timer(frameDurationMs);
+        frameTimer.Elapsed += (s, e) =>
+        {
+            currentFrame = (currentFrame + 1) % totalFrames;
+            InvokeAsync(StateHasChanged);
+        };
+        frameTimer.Start();
+    }
+
+    private string GetSpriteStyle()
+    {
+        int offsetY = currentFrame * frameHeight;
+        return $@"
+            width:{frameWidth}px;
+            height:{frameHeight}px;
+            object-fit:none;
+            object-position:0px -{offsetY}px;
+            transform: scale({scaleX}, {scaleY});
+            transform-origin: top left;";
+    }
+
+    public void Dispose()
+    {
+        frameTimer?.Stop();
+        frameTimer?.Dispose();
+    }
+}
+
+
+
+
+
+
+
+
+}
+

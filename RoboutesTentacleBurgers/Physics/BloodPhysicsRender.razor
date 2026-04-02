@@ -1,0 +1,47 @@
+﻿
+
+
+
+
+
+
+
+
+
+@foreach (var registry in BloodPhysicsHandle.AllRegistries)
+{
+    foreach (var physics in registry)
+    {
+        // Flag if this is the currently active dynamic object
+        var isActive = Physics != null && ReferenceEquals(physics, Physics);
+
+        // Only render if the object exists
+        if (physics != null)
+        {
+            <div style="@physics.PhysSpriteStyle"></div>
+        }
+    }
+}
+
+
+
+
+
+
+@code {
+ 
+
+    [Parameter] public BloodPhysicsHandle? PhysicsHandle { get; set; } 
+    public IPhysics? Physics => PhysicsHandle?.Physics;
+}
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,86 @@
+﻿@page "/DarkForest1040"
+
+<PageTitle>BloodForest1040</PageTitle>
+
+<div class="DiabloBlueGlow" style="font-size:150%">BloodForest1040</div>
+
+@inject BloodWyrmService Game
+@inject BloodWaveReg1040 WaveReg1040
+@inject NavigationManager NavManager
+<div class="bloodwyrm-shell"
+     @onkeydown="Input.HandleKeyDown"
+     @onkeyup="Input.HandleKeyUp"
+     @onmousedown="Input.HandleMouseDown"
+     @onmouseup="Input.HandleMouseUp"
+     @onmousemove="Input.HandleMouseMove"
+     @oncontextmenu:preventDefault="true"
+     tabindex="0">
+    @* PAGE LOADER *@
+
+    @if (Game.showGameMenu)
+    {
+        <BloodGameMenu OnSectChar="Game.HandleCharSelect" OnOptions="Game.HandleOptions" OnControls="Game.HandleControls" OnQuit="Game.HandleQuit" />
+    }
+    @if (Game.showOptionsMenu)
+    {
+        <BloodOptionsMenu Lighting="Lighting" OnRMainMenu="Game.HandleRMainMenu" />
+    }
+    @if (Game.showControlsMenu)
+    {
+        <BloodControlsMenu OnRMainMenu="Game.HandleRMainMenu" />
+    }
+    @if (Game.showCharacterMenu)
+    {
+        <BloodCharacterSelectMenu OnStart="Game.HandleStart" OnRMainMenu="Game.HandleRMainMenu" />
+    }
+    @if (Game.showInventoryMenu)
+    {
+        <BloodInventory OnInv="Game.HandleInv" CharacterHandle="CharacterHandle" />
+    }
+    <!-- Char Hud -->
+
+    <BloodCharHudRender Lighting="Lighting" CharacterHandle="CharacterHandle" />
+
+    <!-- Map BG Viewport-->
+
+    <div class="bloodwyrm-map" style="left:@Game.ViewportXpx; top:@Game.ViewportYpx;">
+
+        <!-- Map BG -->
+
+        <img src="/iAssets/DarkForest001.png" class="bloodwyrm-bg" />
+
+        <!-- Map Compass -->
+
+        <div style="position:absolute;z-index:9500; top:10px; left:50%; transform:translateX(-50%);">
+            <button class="glow-buttonmap" @onclick='() => NavManager.NavigateTo("/DarkForest1050")'>North</button>
+        </div>
+
+        <div style="position:absolute;z-index:9500; bottom:75px; left:50%; transform:translateX(-50%);">
+            <button class="glow-buttonmap" @onclick='() => NavManager.NavigateTo("/BloodForest1030")'>South</button>
+        </div>
+
+        <!-- single composite handle parameter as requested -->
+        <BloodGame allHandle="allhandles" />
+
+
+
+        <!-- Static Objects -->
+        @foreach (var obj in BloodStaticO1040.BloodStaticRegistry1040.All)
+        {
+            <div style="@obj.SpriteStyle"></div>
+        }
+
+
+
+
+
+
+
+
+    </div>
+
+
+
+
+</div>
+

@@ -1,0 +1,57 @@
+﻿@using RoboutesTentacleBurgers.Lighting;
+
+<!-- Character HUD -->
+@if (ActiveCharacter is not null && ActiveCharacter.CharIsAlive)
+{
+
+
+    <!-- Day/Night Cycle + Weather Particles -->
+    <div class="DiabloBlueGlow" style="position:absolute; top:10px; left:10px; z-index:999;">
+        Hour: @Math.Round(Lighting.LightingCurrentHour, 2)
+        @(Lighting.LightingIsPaused ? "(Paused)" : "")
+    </div>
+
+
+
+
+    <div class="char-hp-box" style="box-shadow:0 0 12px @ActiveCharacter.CharHPColor;">
+        <div class="char-hp-frame"></div>
+        <div class="char-hp-text" style="color:white;">
+            <br />@($"{ActiveCharacter.CharHitPoints}/{ActiveCharacter.CharMaxHP}")
+        </div>
+        <div class="char-hp-bar" style="
+                    background-color:@ActiveCharacter.CharHPColor;
+                    box-shadow:0 0 12px @ActiveCharacter.CharInvColor;
+
+                    --hp-percent:@((ActiveCharacter.CharHitPoints * 100 / ActiveCharacter.CharMaxHP));
+                    width:@((ActiveCharacter.CharHitPoints * 100 / ActiveCharacter.CharMaxHP))%;">
+        </div>
+    </div>
+
+    <div class="char-energy-box" style="box-shadow:0 0 12px @ActiveCharacter.CharEnergyColor;">
+        <div class="char-energy-frame"></div>
+        <div class="char-energy-text" style="color:white;">
+            <br />@($"{ActiveCharacter.CharResourceValue}")
+        </div>
+        <div class="char-energy-bar" style="
+                    background-color:@ActiveCharacter.CharEnergyColor;
+                    box-shadow:0 0 12px @ActiveCharacter.CharInvColor;
+                    --energy-percent:@((ActiveCharacter.CharResourceValue * 100 / ActiveCharacter.CharMaxResourceValue))%;
+                    width:@((ActiveCharacter.CharResourceValue * 100 / ActiveCharacter.CharMaxResourceValue))%;">
+        </div>
+    </div>
+}
+
+
+
+
+@code{
+
+    [Parameter] public ILighting Lighting { get; set; } = default!;
+
+
+    [Parameter] public BloodCharacterHandle? CharacterHandle { get; set; }
+
+    // Proxy for markup
+    public IBloodiCharacter? ActiveCharacter => CharacterHandle?.ActiveCharacter;
+}

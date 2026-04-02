@@ -1,0 +1,356 @@
+﻿
+
+<div class="DiabloBlueGlow" style="font-size:150%">SpectralXB</div>
+<div class="DiabloBlueGlow" style="font-size:150%">SpectralXB (Current) — Imperative core, Engine → Scene → Renderer, Mesh-based (CPU side)</div>
+<div class="DiabloBlueGlow" style="font-size:150%">Strengths: True engine structure, extensible, correct abstraction</div>
+<div class="DiabloBlueGlow" style="font-size:150%">Limits: Needs batching, render backend decision</div>
+<div class="DiabloBlueGlow" style="font-size:150%">FullScreen Toggle on lower right Viewport hover and vice versa</div>
+<div class="DiabloBlueGlow" style="font-size:150%">Press 3 to show Debug</div>
+<div class="DiabloBlueGlow" style="font-size:150%">WASD for Camera Movement</div>
+<div class="DiabloBlueGlow" style="font-size:150%">Project in testing phase, needs to be rebuilt</div>
+
+
+
+@if (showIntro)
+{
+    <div id="IntroOverlay">
+        <div>@((MarkupString)_starsOutput)</div>
+
+        <img src="/iAssets/DoomMenuScreen002.png" />
+
+        <button class="start-btn" @onclick="HideIntro">Start</button>
+    </div>
+}
+
+else { 
+<div id="SpectralX-Viewport"
+     class="SpectralX-Viewport"
+         style="@Viewport.Style"
+     tabindex="0"
+         @onkeydown="Engine.HandleKeyDown"
+         @onmousedown="Input.HandleMouseDown"
+         @onmouseup="Input.HandleMouseUp"
+         @onmousemove="Input.HandleMouseMove"
+         @oncontextmenu="Input.PreventContextMenu"
+     @oncontextmenu:preventDefault="true">
+
+        @Debug.Output
+        @Renderer.Output
+        
+     <button class="fullscreen-toggle" @onclick="ToggleViewport">
+        @ToggleIcon
+     </button>    
+   
+</div>
+}
+
+
+<style>
+
+
+    #IntroOverlay {
+        inset: 0;
+        background: black;
+        height: 600px;
+        width: 800px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        margin: 20px auto;
+        /* rude code here-->>   padding: 20px;*/
+        position: relative;
+        transition: all 0.5s ease-in-out;
+        z-index: 1;
+    }
+
+        #IntroOverlay img {
+            max-width: 80%;
+            margin-bottom: 20px;
+        }
+
+    .start-btn {
+        font-size: 24px;
+        padding: 12px 24px;
+        background: crimson;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+        .start-btn:hover {
+            background: darkred;
+        }
+
+</style>
+
+
+        @code{
+    private bool showIntro = true;
+    private string _starsOutput = string.Empty;
+    private System.Timers.Timer? _starsTimer;
+
+    protected override void OnInitialized()
+    {
+        StartStars();
+    }
+
+    private void StartStars()
+    {
+        _starsTimer = new System.Timers.Timer(1000);
+        _starsTimer.Elapsed += (s, e) =>
+        {
+            var rnd = new Random();
+            _starsOutput = string.Empty;
+            for (int i = 0; i < 20; i++)
+            {
+                int x = rnd.Next(800);
+                int y = rnd.Next(600);
+                _starsOutput += $@"<div style='
+                    width:4px;height:4px;background:white;border-radius:50%;
+                    position:absolute;top:{y}px;left:{x}px;box-shadow:0 0 10px white;'>
+                </div>";
+            }
+            InvokeAsync(StateHasChanged);
+        };
+        _starsTimer.Start();
+    }
+
+    private void HideIntro()
+    {
+        showIntro = false;
+        _starsTimer?.Stop();
+        _starsOutput = string.Empty;
+    }
+
+        
+        
+        
+        
+        
+        
+        }
+
+
+                    <script>
+
+
+
+
+    window.toggleFullscreen = function (elementId) {
+        const elem = document.getElementById(elementId);
+        if (!document.fullscreenElement) {
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) { // Safari
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { // IE11
+                elem.msRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    };
+
+
+    window.getViewportSize = (id) => {
+        const el = document.getElementById(id);
+
+        if (!el) return null;
+
+        // If fullscreen, use actual screen size
+        if (document.fullscreenElement) {
+            return {
+                width: window.innerWidth,
+                height: window.innerHeight
+            };
+        }
+
+        // Otherwise use element's real size
+        const rect = el.getBoundingClientRect();
+
+        return {
+            width: Math.floor(rect.width),
+            height: Math.floor(rect.height)
+        };
+    }
+
+
+
+    window.registerFullscreenListener = function (dotnetRef) {
+        document.addEventListener("fullscreenchange", () => {
+            if (!document.fullscreenElement) {
+                dotnetRef.invokeMethodAsync("OnFullscreenExit");
+            }
+        });
+    };
+
+    function spectralXLoop(dotnetRef) {
+        function frame() {
+            dotnetRef.invokeMethodAsync("Tick");
+            requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+    }
+
+
+
+
+        // GamepadAPI.js - Polls gamepad state and sends to Blazor
+
+    window.GamepadAPI = {
+        dotNetRef: null,
+        isPolling: false,
+        rafId: null,
+
+        // Dead zone threshold (analog sticks)
+        deadZone: 0.15,
+
+        // Initialize and start polling
+        init: function (dotNetReference) {
+            console.log('[GamepadAPI] Initializing...');
+            this.dotNetRef = dotNetReference;
+            this.startPolling();
+        },
+
+        // Start polling loop
+        startPolling: function () {
+            if (this.isPolling) return;
+
+            this.isPolling = true;
+            console.log('[GamepadAPI] Polling started');
+
+            const poll = () => {
+                if (!this.isPolling) return;
+
+                this.update();
+                this.rafId = requestAnimationFrame(poll);
+            };
+
+            poll();
+        },
+
+        // Stop polling
+        stopPolling: function () {
+            this.isPolling = false;
+            if (this.rafId) {
+                cancelAnimationFrame(this.rafId);
+                this.rafId = null;
+            }
+            console.log('[GamepadAPI] Polling stopped');
+        },
+
+        // Main update loop - called every frame
+        update: function () {
+            const gamepads = navigator.getGamepads();
+
+            // Find first connected gamepad
+            let gamepad = null;
+            for (let i = 0; i < gamepads.length; i++) {
+                if (gamepads[i]) {
+                    gamepad = gamepads[i];
+                    break;
+                }
+            }
+
+            if (!gamepad) return;
+
+            // Apply dead zone to axes
+            const applyDeadZone = (value) => {
+                return Math.abs(value) < this.deadZone ? 0 : value;
+            };
+
+            // Build state object
+            const state = {
+                // Left stick (movement)
+                leftStickX: applyDeadZone(gamepad.axes[0] || 0),
+                leftStickY: applyDeadZone(gamepad.axes[1] || 0),
+
+                // Right stick (camera)
+                rightStickX: applyDeadZone(gamepad.axes[2] || 0),
+                rightStickY: applyDeadZone(gamepad.axes[3] || 0),
+
+                // Buttons (standard Xbox/PlayStation layout)
+                buttonA: gamepad.buttons[0]?.pressed || false,      // A/Cross
+                buttonB: gamepad.buttons[1]?.pressed || false,      // B/Circle
+                buttonX: gamepad.buttons[2]?.pressed || false,      // X/Square
+                buttonY: gamepad.buttons[3]?.pressed || false,      // Y/Triangle
+
+                leftBumper: gamepad.buttons[4]?.pressed || false,
+                rightBumper: gamepad.buttons[5]?.pressed || false,
+
+                leftTrigger: gamepad.buttons[6]?.value || 0,
+                rightTrigger: gamepad.buttons[7]?.value || 0,
+
+                buttonBack: gamepad.buttons[8]?.pressed || false,
+                buttonStart: gamepad.buttons[9]?.pressed || false,
+
+                leftStickButton: gamepad.buttons[10]?.pressed || false,
+                rightStickButton: gamepad.buttons[11]?.pressed || false,
+
+                dpadUp: gamepad.buttons[12]?.pressed || false,
+                dpadDown: gamepad.buttons[13]?.pressed || false,
+                dpadLeft: gamepad.buttons[14]?.pressed || false,
+                dpadRight: gamepad.buttons[15]?.pressed || false
+            };
+
+            // Send to Blazor
+            if (this.dotNetRef) {
+                this.dotNetRef.invokeMethodAsync('UpdateGamepadState', state);
+            }
+        },
+
+        // Cleanup
+        dispose: function () {
+            this.stopPolling();
+            this.dotNetRef = null;
+            console.log('[GamepadAPI] Disposed');
+        }
+    };
+
+    // Listen for gamepad connect/disconnect
+    window.addEventListener('gamepadconnected', (e) => {
+        console.log('[GamepadAPI] Gamepad connected:', e.gamepad.id);
+    });
+
+    window.addEventListener('gamepaddisconnected', (e) => {
+        console.log('[GamepadAPI] Gamepad disconnected:', e.gamepad.id);
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    </script>

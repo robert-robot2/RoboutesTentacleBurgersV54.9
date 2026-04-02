@@ -1,0 +1,78 @@
+﻿.SpectralX-Viewport {
+    margin: 20px auto;
+    padding: 20px;
+    position: relative;
+    transition: all 0.5s ease-in-out; /* smooth resize */
+}
+
+.fullscreen-toggle {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid #ccc;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 0; /* start hidden */
+    transition: opacity 0.3s ease-in-out, background-color 0.5s ease-in-out;
+}
+
+    /* ✅ ONLY show when the actual button is hovered */
+    .fullscreen-toggle:hover {
+        opacity: 1;
+    }
+
+
+/* -------- Cube + Placeholder (UNCHANGED) -------- */
+
+.cube-placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 24px;
+}
+
+.cube {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-style: preserve-3d;
+    transform: translate(-50%, -50%) rotateX(-20deg) rotateY(20deg);
+    width: 100px;
+    height: 100px;
+}
+
+.face {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid #ccc;
+}
+
+.front {
+    transform: translateZ(50px);
+}
+
+.back {
+    transform: rotateY(180deg) translateZ(50px);
+}
+
+.right {
+    transform: rotateY(90deg) translateZ(50px);
+}
+
+.left {
+    transform: rotateY(-90deg) translateZ(50px);
+}
+
+.top {
+    transform: rotateX(90deg) translateZ(50px);
+}
+
+.bottom {
+    transform: rotateX(-90deg) translateZ(50px);
+}

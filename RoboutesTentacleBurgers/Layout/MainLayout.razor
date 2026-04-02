@@ -1,0 +1,170 @@
+﻿@inject IJSRuntime JSRuntime
+@inherits LayoutComponentBase
+
+@IAppStyles.GetCss()
+
+@IBloodStyles.GetCss()
+@ICalcStyles.GetCss()
+@IChemCalcStyles.GetCss()
+@IClockStyles.GetCss()
+@IFontsStyles.GetCss()
+@IErrorStyles.GetCss()
+@IPotionStyles.GetCss()
+
+
+
+@inject string Env
+@implements IDisposable
+
+<div class="top-row DiabloBlueGlow">
+    <div class="top-left">
+        <a href="Inventory" class="hamburger-btn" title="Inventory">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </a>
+        <div class="title-stack">
+            <a class="DiabloBlueGlow site-title" href="" style="font-size:125%">Roboutes Tentacle Burgers</a>
+            <span class="mobile-clock">@shortTime</span>
+        </div>
+    </div>
+    <div class="top-right">
+        <div class="clock-display">@currentTime</div>
+        <div style="flex: 1;"></div>
+        <div class="dots-menu">
+            <button class="dots-btn" @onclick="ToggleMenu">⋮</button>
+            @if (menuOpen)
+            {
+                <div class="dots-dropdown">
+                    <label style="cursor:pointer; display:flex; align-items:center; gap:0.5rem;">
+                        <input type="color" id="rgbPicker" value="#00aaff">
+                        Pick Theme
+                    </label>
+                    <button class="dots-item" disabled>Settings</button>
+                    <button class="dots-item" disabled>Log Out</button>
+                </div>
+            }
+        </div>
+        <a href="authentication/login" class="mobile-login-circle" title="Login">👤</a>
+        <div class="desktop-only">
+            <LoginDisplay />
+        </div>
+    </div>
+</div>
+
+<div class="page">
+<main>
+     <article class="">
+            @Body
+        </article>
+    </main>
+</div>
+
+
+
+<div style="position: fixed; bottom: 10px; right: 10px; background: #222; color: #fff; padding: 5px 10px; font-size: 0.9rem; z-index: 9999; border-radius: 4px;">
+    @Env
+</div>
+
+@code {
+
+    private bool menuOpen = false;
+
+    private async Task ToggleMenu()
+    {
+        menuOpen = !menuOpen;
+        if (menuOpen)
+        {
+            await Task.Delay(50); // wait for Blazor to render dropdown
+            await JSRuntime.InvokeVoidAsync("initPicker");
+        }
+    }
+
+
+    private string currentTime = "";
+    private System.Timers.Timer? clockTimer;
+
+    protected override void OnInitialized()
+    {
+        clockTimer = new System.Timers.Timer(1000); // 1 second interval
+        clockTimer.Elapsed += (_, __) => UpdateTime();
+        clockTimer.AutoReset = true;
+        clockTimer.Enabled = true;
+    }
+    private string shortTime = "";
+
+    private void UpdateTime()
+    {
+        try
+        {
+            var utcNow = DateTime.UtcNow;
+            var easternZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+            var easternTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, easternZone);
+            currentTime = easternTime.ToString("dddd, MMMM dd yyyy — hh:mm:ss tt");
+            shortTime = easternTime.ToString("h:mm tt");
+        }
+        catch
+        {
+            var utcNow = DateTime.UtcNow;
+            bool isDst = utcNow.Month >= 3 && utcNow.Month <= 11;
+            var easternTime = utcNow.AddHours(isDst ? -4 : -5);
+            currentTime = easternTime.ToString("dddd, MMMM dd yyyy — hh:mm:ss tt");
+            shortTime = easternTime.ToString("h:mm tt");
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        clockTimer?.Dispose();
+    }
+}
+
+<script>
+    const picker = document.getElementById("rgbPicker");
+
+  
+       // Load saved color on page load
+    const savedColor = localStorage.getItem("themeColor");
+
+    if (savedColor) {
+        applyColor(savedColor);
+        picker.value = savedColor;
+    } else {
+        const defaultColor = "#00aaff";
+        applyColor(defaultColor);
+        picker.value = defaultColor;
+        localStorage.setItem("themeColor", defaultColor); // <-- THIS is the missing piece
+    }
+
+
+    picker.addEventListener("input", (e) => {
+        const color = e.target.value;
+        applyColor(color);
+        localStorage.setItem("themeColor", color);
+    });
+
+    function applyColor(color) {
+        document.documentElement.style.setProperty("--primary-color", color);
+        document.documentElement.style.setProperty("--text-glow", color);
+        document.documentElement.style.setProperty("--bg-bottom", color);
+        document.documentElement.style.setProperty("--bg-top", color);
+        document.documentElement.style.setProperty("--text-color", "#ffffff");
+    }
+
+    function initPicker() {
+        const picker = document.getElementById("rgbPicker");
+        if (!picker) return;
+
+        const savedColor = localStorage.getItem("themeColor") || "#00aaff";
+        applyColor(savedColor);
+        picker.value = savedColor;
+
+        picker.addEventListener("input", (e) => {
+            const color = e.target.value;
+            applyColor(color);
+            localStorage.setItem("themeColor", color);
+        });
+    }
+
+</script>

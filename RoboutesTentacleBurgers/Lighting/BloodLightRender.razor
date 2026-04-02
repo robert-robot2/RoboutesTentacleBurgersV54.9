@@ -1,0 +1,44 @@
+﻿
+
+
+
+
+
+@if (Lighting != null)
+{
+    <span style="
+                position:absolute;
+                left:0; top:0;
+                width:2048px; height:2048px;
+                background-color:rgba(@Lighting.LightingColor.R,
+                                      @Lighting.LightingColor.G,
+                                      @Lighting.LightingColor.B,
+                                      @Lighting.LightingIntensity);
+                z-index:8600;
+                pointer-events:none;">
+    </span>
+}
+
+
+
+
+
+
+
+
+
+
+@code {
+
+
+    [Parameter] public ILighting Lighting { get; set; } = default!;
+
+
+
+
+
+
+
+
+
+}

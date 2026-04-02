@@ -1,0 +1,133 @@
+﻿
+
+
+@inject BloodLevel LevelReg
+
+<div class="glow-buttonInv"
+     @onkeypress="OnInvPressed"
+     tabindex="0"
+     style="border-color:@ActiveCharacter.CharInvColor;
+            box-shadow:0 0 12px @ActiveCharacter.CharInvColor;
+            color:@ActiveCharacter.CharInvColor;">
+
+    @if (ActiveCharacter is not null && ActiveCharacter.CharIsAlive)
+    {
+        <div class="class-bar" style="color:@ActiveCharacter.CharInvColor">
+           @ActiveCharacter.CharClassName
+        </div>
+
+        <div class="level-bar">
+            <span style="color:@ActiveCharacter.CharInvColor;text-shadow:0 0 12px @ActiveCharacter.CharInvColor;">Level:</span>
+            <div class="level-tick" style="color:@ActiveCharacter.CharInvColor;text-shadow:0 0 12px @ActiveCharacter.CharInvColor;">
+                @ActiveCharacter.CharLevel
+            </div>
+        </div>
+
+        <div class="xp-bar">
+            <span style="color:@ActiveCharacter.CharInvColor;text-shadow:0 0 12px @ActiveCharacter.CharInvColor;">Total XP:</span>
+            <div class="xp-tick" style="color:@ActiveCharacter.CharInvColor;text-shadow:0 0 12px @ActiveCharacter.CharInvColor;">
+                @ActiveCharacter.CharXP
+            </div>
+        </div>
+
+        <div class="stat-row1">
+            <span style="color:@ActiveCharacter.CharInvColor;text-shadow:0 0 12px @ActiveCharacter.CharInvColor;">Constitution:</span>
+            <span>@ActiveCharacter.CharHitPoints</span>
+        </div>
+
+        <div class="stat-row2">
+            <span style="color:@ActiveCharacter.CharInvColor;text-shadow:0 0 12px @ActiveCharacter.CharInvColor;">Strength:</span>
+            <span>@ActiveCharacter.CharStrength</span>
+            <button style="color:@ActiveCharacter.CharInvColor;box-shadow:0 0 12px @ActiveCharacter.CharInvColor;" class="stat-plus" @onclick='() => LevelReg.AllocateStat("Strength")'>+</button>
+        </div>
+
+        <div class="stat-row3">
+            <span style="color:@ActiveCharacter.CharInvColor;text-shadow:0 0 12px @ActiveCharacter.CharInvColor;">Alacrity:</span>
+            <span>@ActiveCharacter.CharAlacrity</span>
+            <button style="color:@ActiveCharacter.CharInvColor;box-shadow:0 0 12px @ActiveCharacter.CharInvColor;" class="stat-plus" @onclick='() => LevelReg.AllocateStat("Alacrity")'>+</button>
+        </div>
+
+        <div class="stat-row4">
+            <span style="color:@ActiveCharacter.CharInvColor;text-shadow:0 0 12px @ActiveCharacter.CharInvColor;">Celerity:</span>
+            <span>@ActiveCharacter.CharCelerity</span>
+            <button style="color:@ActiveCharacter.CharInvColor;box-shadow:0 0 12px @ActiveCharacter.CharInvColor;" class="stat-plus" @onclick='() => LevelReg.AllocateStat("Celerity")'>+</button>
+        </div>
+
+        <div class="stat-row5">
+            <span style="color:@ActiveCharacter.CharInvColor;text-shadow:0 0 12px @ActiveCharacter.CharInvColor;">Limenity:</span>
+            <span>@ActiveCharacter.CharLimenity</span>
+            <button style="color:@ActiveCharacter.CharInvColor;box-shadow:0 0 12px @ActiveCharacter.CharInvColor;" class="stat-plus" @onclick='() => LevelReg.AllocateStat("Limenity")'>+</button>
+        </div>
+
+        <div class="stat-row6">
+            <span style="color:@ActiveCharacter.CharInvColor;text-shadow:0 0 12px @ActiveCharacter.CharInvColor;">Intelligence:</span>
+            <span>@ActiveCharacter.CharIntelligence</span>
+            <button style="color:@ActiveCharacter.CharInvColor;box-shadow:0 0 12px @ActiveCharacter.CharInvColor;" class="stat-plus" @onclick='() => LevelReg.AllocateStat("Intelligence")'>+</button>
+        </div>
+
+        <div class="stat-row7">
+            <span style="color:@ActiveCharacter.CharInvColor;text-shadow:0 0 12px @ActiveCharacter.CharInvColor;">@ActiveCharacter.CharResourceName:</span>
+            <span>
+                @($"{ActiveCharacter.CharResourceValue}/{ActiveCharacter.CharMaxResourceValue}")
+            </span>
+
+            <button style="color:@ActiveCharacter.CharInvColor;box-shadow:0 0 12px @ActiveCharacter.CharInvColor;" class="stat-plus" @onclick='() => LevelReg.AllocateStat("uniqueS1")'>+</button>
+        </div>
+
+        <div class="stat-row8">
+            <span style="color:@ActiveCharacter.CharInvColor;text-shadow:0 0 12px @ActiveCharacter.CharInvColor;">@ActiveCharacter.CharRegenLabel:</span>
+            <span>@ActiveCharacter.CharRegenValue</span>
+            <button style="color:@ActiveCharacter.CharInvColor;box-shadow:0 0 12px @ActiveCharacter.CharInvColor;" class="stat-plus" @onclick='() => LevelReg.AllocateStat("uniqueS2")'>+</button>
+        </div>
+
+        <div class="stat-row9">
+            <span style="color:@ActiveCharacter.CharInvColor;text-shadow:0 0 12px @ActiveCharacter.CharInvColor;">Life Regen:</span>
+            <span>@ActiveCharacter.CharLifeRegen</span>
+            <button style="color:@ActiveCharacter.CharInvColor;box-shadow:0 0 12px @ActiveCharacter.CharInvColor;" class="stat-plus" @onclick='() => LevelReg.AllocateStat("Life Regen")'>+</button>
+        </div>
+
+        <div class="stat-row10">
+            <span style="color:@ActiveCharacter.CharInvColor;text-shadow:0 0 12px @ActiveCharacter.CharInvColor;">Stat Points:</span>
+            <span>@ActiveCharacter.CharStatPoints</span>
+        </div>
+        <div class="stat-row11">
+        <div style="color:@ActiveCharacter.CharInvColor;text-shadow:0 0 12px @ActiveCharacter.CharInvColor;">Hunger:</div>
+   
+        </div>
+        <div class="char-hunger-box" style="box-shadow:0 0 12px @ActiveCharacter.CharEnergyColor;">
+
+            <div class="char-hunger-frame"></div>
+            <div class="char-hunger-text" style="color:white;">
+                <br />@($"{ActiveCharacter.CharHungerCurrent}")
+            </div>
+            <div class="char-hunger-bar" style="
+                            background-color:@ActiveCharacter.CharEnergyColor;
+                            box-shadow:0 0 12px @ActiveCharacter.CharInvColor;
+                            --hunger-percent:@((ActiveCharacter.CharHungerCurrent * 100 / ActiveCharacter.CharHungerFull))%;
+                            width:@((ActiveCharacter.CharHungerCurrent * 100 / ActiveCharacter.CharHungerFull))%;">
+            </div>
+        </div>
+
+    }
+</div>
+
+
+@code {
+    [Parameter] public EventCallback OnInv { get; set; }
+
+    [Parameter] public BloodCharacterHandle? CharacterHandle { get; set; }
+
+    // Proxy for markup
+    public IBloodiCharacter? ActiveCharacter => CharacterHandle?.ActiveCharacter;
+
+
+
+
+    private async Task OnInvPressed()
+    {
+        await OnInv.InvokeAsync();
+    }
+
+
+
+}

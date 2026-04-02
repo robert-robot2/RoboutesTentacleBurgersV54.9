@@ -1,0 +1,65 @@
+﻿
+
+
+
+
+
+
+@foreach (var registry in BloodBreakHandle.AllRegistries)
+{
+    foreach (var breakable in registry)
+    {
+        var isActive = Breakables != null && ReferenceEquals(breakable, Breakables);
+
+        if (breakable.BreakIsAlive)
+        {
+            <div style=@($"{breakable.BreakSpriteStyle}" +
+                      (!string.IsNullOrEmpty(breakable.BreakHitEffectPath)
+                      ? " filter:brightness(150%) saturate(200%);"
+                      : ""))></div>
+
+            @if (!string.IsNullOrEmpty(breakable.BreakHitEffectPath))
+            {
+                <img src="@breakable.BreakHitEffectPath"
+                     style=@($"position:absolute; left:{breakable.BreakX}px; top:{breakable.BreakY}px; z-index:80;") />
+            }
+          
+
+        }
+
+
+
+
+        else
+        {
+            <img src="/iAssets/DummyCooked005.png"
+                 style=@($"position:absolute; left:{breakable.BreakX}px; top:{breakable.BreakY}px; opacity:0.4; filter:grayscale(100%);z-index:80;") />
+        }
+
+
+
+
+
+    }
+}
+
+
+@code {
+ 
+
+    [Parameter] public BloodBreakHandle? BreakHandle { get; set; } 
+    public IBreakables? Breakables => BreakHandle?.Breakables;
+
+
+}
+
+
+
+
+
+
+
+
+
+
+

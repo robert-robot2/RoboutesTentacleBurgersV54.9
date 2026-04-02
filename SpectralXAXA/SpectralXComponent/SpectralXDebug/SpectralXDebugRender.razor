@@ -1,0 +1,99 @@
+﻿
+
+
+@if (Input.ShowDebugOverlay) { 
+
+
+
+<div class="debug-overlay" style="position:fixed;bottom:300px;left:0;padding:10px;background:rgba(0,0,0,0.8);color:white;font-family:monospace;width:300px;">
+    <h4>Recent Keys:</h4>
+    <div>
+        @foreach (var key in Input.DebugRecentKeys)
+        {
+            <span style="display:inline-block;margin-right:5px;padding:2px 5px;border-radius:3px;
+                                    background:@(Input.DebugActiveSequences().Any(seq => seq.Contains(key)) ? "lime" : "#444");
+                                    color:white;font-weight:bold;transition:all 0.2s;">
+                @key
+            </span>
+        }
+    </div>
+
+    <h4>Active Sequences:</h4>
+    <div>
+        @foreach (var seq in Input.DebugActiveSequences())
+        {
+            <span style="display:inline-block;margin:2px;padding:2px 5px;border-radius:3px;background:orange;font-weight:bold;">
+                @seq
+            </span>
+        }
+    </div>
+    <h4>Combo Meter:</h4>
+    <div style="width:100%;height:10px;background:#222;border-radius:5px;">
+        <div style="height:100%;width:@($"{Input.GetComboProgressPercent()}%");background:lime;border-radius:5px;transition:width 0.1s;"></div>
+    </div>
+        <h4>Debug Messages:</h4>
+        <div>
+            @foreach (var msg in Input.DebugMessages.TakeLast(5))
+            {
+                <div>@msg</div>
+            }
+        </div>
+
+</div>
+
+
+
+    <div style="position:absolute; top:10px; left:10px; color:lime; background:rgba(0,0,0,0.9); padding:10px; font-family:monospace; font-size:12px;">
+        <div><b>PERFORMANCE</b></div>
+        <div>FPS: @Engine.Performance.CurrentFPS.ToString("F1")</div>
+        <div>Avg: @Engine.Performance.AverageFPS.ToString("F1")</div>
+        <div>Min: @Engine.Performance.MinFPS.ToString("F1")</div>
+        <div>Max: @Engine.Performance.MaxFPS.ToString("F1")</div>
+        <div>Frame: @Engine.Performance.FrameTimeMs.ToString("F2")ms</div>
+        <div>Viewport 1 C# Matrix: @Viewport.ViewportWidth x @Viewport.ViewportHeight</div>
+        <div>Viewport 2 SVG HUD Matrix: @SVGViewport.SVGViewportWidth x @SVGViewport.SVGViewportHeight</div>
+        <div>Projection Aspect: @(SVGViewport.SVGViewportWidth / (float)SVGViewport.SVGViewportHeight)</div>
+        <div>Sample Triangle Coords: @(SVGViewport.RenderedTriangles.FirstOrDefault()?.P0.ToString())</div>
+        <hr style="border-color:lime;" />
+        <div><b>SCENE INFO</b></div>
+        <div>Entities: @Scene.EntityCount</div>
+        <div>Visible: @Scene.VisibleEntityCount</div>
+        <div>Triangles Rendered: @Renderer.TrianglesRendered</div>
+        <hr style="border-color:lime;" />
+        <div><b>LOADED MESHES</b></div>
+        @foreach (var meshName in MeshLibrary.Meshes.Keys)
+        {
+            var mesh = MeshLibrary.Meshes[meshName];
+            <div>@meshName: @mesh.VertexCount verts, @mesh.TriangleCount tris</div>
+        }
+        @*
+        <div>
+            FBX Loaded: @Renderer.CurrentMesh.Name
+            (@Renderer.CurrentMesh.Vertices.Count verts,
+            @(Renderer.CurrentMesh.Indices.Count / 3) faces)
+        </div>
+        *@
+        <hr style="border-color:lime;" />
+        @foreach (var metric in Engine.Performance.GetMetrics().Values)
+        {
+            <div>@metric.Name: @metric.AverageMs.ToString("F2")ms (@metric.PercentOfFrame.ToString("F1")%)</div>
+        }
+    </div>
+    <div style="position:absolute; top:10px; right:10px; color:lime; background:rgba(0,0,0,0.8); padding:10px;">
+        Camera Position: @Camera.Position.ToString()
+    </div>
+   
+}
+
+@code{
+
+
+    [Parameter] public SpectralXInput? Input { get; set; } // null-forgiving, assign later in OnInitialized
+    [Parameter] public SpectralXEngine? Engine { get; set; }
+    [Parameter] public SpectralXCamera? Camera { get; set; }
+    [Parameter] public SpectralXViewport? Viewport { get; set; }
+    [Parameter] public SpectralXSVGViewport? SVGViewport { get; set; }
+    [Parameter] public SpectralXRenderer? Renderer { get; set; }
+    [Parameter] public SpectralXScene? Scene { get; set; }
+    [Parameter] public SpectralXMeshLibrary? MeshLibrary { get; set; }
+ }

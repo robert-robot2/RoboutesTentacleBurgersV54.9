@@ -1,0 +1,132 @@
+﻿<div class="bloodwyrm-title">
+    Controls
+</div>
+
+<table class="bloodwyrm-subtitletext">
+    <tr>
+        <td>Move Up:</td>
+        <td>
+            <input class="bloodwyrm-input"
+                   type="text"
+                   value="@KeybindConfig.GetBinding("MoveUp")"
+                   tabindex="0"
+                   @onclick="@(() => activeAction = "MoveUp")"
+                   @onkeydown="CaptureKey" />
+        </td>
+    </tr>
+    <tr>
+        <td>Move Down:</td>
+        <td>
+            <input class="bloodwyrm-input"
+                   type="text"
+                   value="@KeybindConfig.GetBinding("MoveDown")"
+                   tabindex="0"
+                   @onclick="@(() => activeAction = "MoveDown")"
+                   @onkeydown="CaptureKey" />
+        </td>
+    </tr>
+    <tr>
+        <td>Move Left:</td>
+        <td>
+            <input class="bloodwyrm-input"
+                   type="text"
+                   value="@KeybindConfig.GetBinding("MoveLeft")"
+                   tabindex="0"
+                   @onclick="@(() => activeAction = "MoveLeft")"
+                   @onkeydown="CaptureKey" />
+        </td>
+    </tr>
+    <tr>
+        <td>Move Right:</td>
+        <td>
+            <input class="bloodwyrm-input"
+                   type="text"
+                   value="@KeybindConfig.GetBinding("MoveRight")"
+                   tabindex="0"
+                   @onclick="@(() => activeAction = "MoveRight")"
+                   @onkeydown="CaptureKey" />
+        </td>
+    </tr>
+    <tr>
+        <td>Attack:</td>
+        <td>
+            <input class="bloodwyrm-input"
+                   type="text"
+                   value="@KeybindConfig.GetBinding("Attack")"
+                   tabindex="0"
+                   @onclick="@(() => activeAction = "Attack")"
+                   @onkeydown="CaptureKey" />
+        </td>
+    </tr>
+    <tr>
+        <td>SpAttack:</td>
+        <td>
+            <input class="bloodwyrm-input"
+                   type="text"
+                   value="@KeybindConfig.GetBinding("SPAttack")"
+                   tabindex="0"
+                   @onclick="@(() => activeAction = "SPAttack")"
+                   @onkeydown="CaptureKey" />
+        </td>
+    </tr>
+    <tr>
+        <td>Menu:</td>
+        <td>
+            <input class="bloodwyrm-input"
+                   type="text"
+                   value="@KeybindConfig.GetBinding("Menu")"
+                   tabindex="0"
+                   @onclick="@(() => activeAction = "Menu")"
+                   @onkeydown="CaptureKey" />
+        </td>
+    </tr>
+    <tr>
+        <td>Inventory:</td>
+        <td>
+            <input class="bloodwyrm-input"
+                   type="text"
+                   value="@KeybindConfig.GetBinding("Inventory")"
+                   tabindex="0"
+                   @onclick="@(() => activeAction = "Inventory")"
+                   @onkeydown="CaptureKey" />
+        </td>
+    </tr>
+    <tr>
+        <td>FPS:</td>
+        <td>
+            <input class="bloodwyrm-input"
+                   type="text"
+                   value="@KeybindConfig.GetBinding("Performance")"
+                   tabindex="0"
+                   @onclick="@(() => activeAction = "Performance")"
+                   @onkeydown="CaptureKey" />
+        </td>
+    </tr>
+    <tr>
+
+        <td>PlaceHolder For GamePad Binds</td></tr>
+</table>
+
+<button class="glow-button4" @onclick="OnRMainMenuPressed">Main Menu</button>
+
+@code {
+    private string? activeAction;
+
+    private void CaptureKey(KeyboardEventArgs e)
+    {
+        if (string.IsNullOrEmpty(activeAction)) return;
+
+        KeybindConfig.SetBinding(activeAction, e.Key);
+        activeAction = null;
+    }
+
+
+
+    [Parameter] public EventCallback OnRMainMenu { get; set; }
+    private async Task OnRMainMenuPressed()
+    {
+        await OnRMainMenu.InvokeAsync();
+    }
+
+   
+}

@@ -1,0 +1,71 @@
+﻿
+
+<div class="bloodwyrm-subtitle">
+    Choose your Champion!<br />
+
+</div>
+
+
+<img src="/iAssets/Warriorart01.png" class="char-button1" @onclick="@(() => SelectCharacter("Warrior"))" />
+
+<img src="/iAssets/QuestionArt001.png" class="char-button2" @onclick="@(() => SelectCharacter(""))" />
+
+<img src="/iAssets/D1RogueArt.png" class="char-button3" @onclick="@(() => SelectCharacter("Rogue"))" />
+
+
+<img src="/iAssets/D1MageSelect01.png" class="char-button4" @onclick="@(() => SelectCharacter("Mage"))" />
+
+
+
+<img src="/iAssets/MonkArt001.png" class="char-button5" @onclick="@(() => SelectCharacter("Monk"))" />
+
+
+
+
+
+
+
+<button class="glow-button2" @onclick="OnStartPressed">Start</button>
+<button class="glow-button4" @onclick="OnRMainMenuPressed">Main Menu</button>
+
+
+
+
+@code {
+ 
+     [Parameter] public EventCallback OnStart { get; set; }
+
+        [Parameter] public EventCallback OnRMainMenu { get; set; }
+         private async Task OnStartPressed()
+    {
+        await OnStart.InvokeAsync();
+
+
+    }
+   
+    private async Task OnRMainMenuPressed()
+    {
+        await OnRMainMenu.InvokeAsync();
+
+
+    }
+
+    [Parameter] public EventCallback<string> OnCharacterSelected { get; set; }
+
+    private async Task SelectCharacter(string SectChar)
+    {
+      
+        await OnCharacterSelected.InvokeAsync(SectChar);
+    }
+
+
+
+}
+
+
+
+
+
+
+
+

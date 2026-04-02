@@ -1,0 +1,290 @@
+@page "/SpectralXGLX"
+
+
+<PageTitle>SpectralX</PageTitle>
+<div class="DiabloBlueGlow" style="font-size:150%">SpectralX — WebGL2 renderer pipeline</div>
+<div class="DiabloBlueGlow" style="font-size:150%">Controls: WASD / Right Click Hold/ Gamepad for camera movement/ Look, Press 3 to show debug info, Press 4 to Hide UI, left click hold sphere light to move point light on X-Axis, Shift Left Click to move light on Y axis.</div>
+
+
+
+@if (showIntro)
+{
+    <div id="IntroOverlay">
+        <div>@((MarkupString)_starsOutput)</div>
+        <img src="/iAssets/ElonMenu.png" />
+        <button class="start-btn" @onclick="HideIntro">Start</button>
+    </div>
+}
+else
+{
+    <div id="SpectralX-Container" class="viewport-container">
+        <canvas id="SpectralX-Viewport"
+                @ref="CanvasRef"
+                class="SpectralX-Viewport"
+                style="@Viewport.Style"
+                tabindex="0"
+                @onkeydown="Engine.HandleKeyDown"
+                @onkeyup="e => Input.HandleKeyUp(e)"
+                @onmousedown="Input.HandleMouseDown"
+                @onmouseup="Input.HandleMouseUp"
+                @onmousemove="e => { Input.HandleMouseMove(e); 
+                  if (Engine.ActiveScene == 2) 
+                   Engine.HandleTileMapMouseMove((float)e.OffsetX, (float)e.OffsetY); }"
+                @oncontextmenu="Input.PreventContextMenu"
+                @oncontextmenu:preventDefault="true">
+        </canvas>
+
+      <div id="SpectralX-Loader" style="position:absolute; inset:0; z-index:100; pointer-events:none; flex-direction:column; align-items:center; justify-content:center; display:none;">
+    <svg class="sx-loading-progress" viewBox="0 0 100 100">
+        <circle r="40" cx="50" cy="50" />
+        <circle r="40" cx="50" cy="50" />
+    </svg>
+    <div class="sx-loading-text">0%</div>
+        </div>
+
+        @if (!_uiHidden)
+        {
+
+            <div class="selector-panel">
+                <div class="aa-selector">
+                    <label>AA Mode</label>
+                    <select @onchange="OnAAModeChanged">
+                        <option value="0">None (MSAA always on)</option>
+                        <option value="1" selected>MSAA ? Active</option>
+                        <option value="2">FXAA</option>
+                        <option value="3">SMAA</option>
+                        <option value="4">TAA</option>
+                        <option value="5">SpectralAA V1</option>
+                        <option value="6">SpectralAA V2</option>
+                        <option value="7">SpectralAA V3</option>
+                    </select>
+                </div>
+                <div class="aa-selector">
+                    <label>Shadow Mode</label>
+                    <select @onchange="OnShadowModeChanged">
+                        <option value="0" selected>Shadow PCF V1</option>
+                        <option value="1">Shadow PCSS V1</option>
+                        <option value="2">SpectralX VDS Shadow V1</option>
+                        <option value="3">SpectralX RPD Shadow V2</option>
+                        <option value="4">SpectralX IGN Shadow V3</option>
+                    </select>
+                </div>
+
+                <div class="aa-selector">
+                    <label>Time of Day</label>
+                    <input type="range"
+                    min="0" max="1" step="0.01"
+                    value="0.5"
+                    @oninput="OnTimeOfDayChanged"
+                    style="width:100%; accent-color: #ff9900;" />
+                    <span style="color:#aaa; font-size:0.8em;">@GetTimeLabel()</span>
+                </div>
+
+
+
+
+
+
+            </div>
+
+            @if (Engine.ActiveScene == 2)
+            {
+                <div style="position:absolute; left:8px; top:8px; bottom:8px; width:110px;
+                background:rgba(0,0,0,0.72); border:1px solid rgba(255,255,255,0.15);
+                border-radius:6px; display:flex; flex-direction:column;
+                padding:8px 6px; gap:6px; overflow-y:auto; z-index:20;
+                font-family:'Courier New',monospace; color:#fff; font-size:11px;">
+
+                    @* ?? Panel Title ??????????????????????????????????????????????? *@
+                    <div style="text-align:center; font-size:10px; color:#aaa;
+    border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px;">
+                        LANDSCAPE
+                    </div>
+
+                    @* Mode toggle *@
+                    <button @onclick="Engine.ToggleLandscapeActive"
+                    style="width:100%; padding:4px 2px; font-size:10px;
+        font-family:'Courier New',monospace;
+        background:@(Engine.TileMap.IsActive ? "#1a6b3a" : "rgba(80,0,0,0.6)");
+        color:@(Engine.TileMap.IsActive ? "#7fff9a" : "#ff6b6b");
+        border:1px solid @(Engine.TileMap.IsActive ? "#2ecc71" : "#c0392b");
+        border-radius:3px; cursor:pointer; text-align:center;">
+                        @(Engine.TileMap.IsActive ? "? ACTIVE" : "? INACTIVE")
+                    </button>
+
+                    @* ?? Save / Load Buttons *@
+                    <div style="display:flex; gap:3px;">
+                        <button @onclick="async () => { await Engine.SaveLandscape(); _savedFlash = true; await Task.Delay(800); _savedFlash = false; StateHasChanged(); }"
+                        style="flex:1; padding:4px 2px; font-size:10px;
+            font-family:'Courier New',monospace;
+            background:@(_savedFlash ? "#1a3a6b" : "rgba(255,255,255,0.07)");
+            color:@(_savedFlash ? "#7faaff" : "#ccc");
+            border:1px solid @(_savedFlash ? "#2e71cc" : "rgba(255,255,255,0.12)");
+            border-radius:3px; cursor:pointer; text-align:center;">
+                            @(_savedFlash ? "SAVED!" : "?? SAVE")
+                        </button>
+                        <button @onclick="async () => { await Engine.LoadLandscape(); }"
+                        style="flex:1; padding:4px 2px; font-size:10px;
+            font-family:'Courier New',monospace;
+            background:rgba(255,255,255,0.07);
+            color:#ccc;
+            border:1px solid rgba(255,255,255,0.12);
+            border-radius:3px; cursor:pointer; text-align:center;">
+                            ?? LOAD
+                        </button>
+                    </div>
+
+
+
+
+
+
+                    @* ?? Paint Mode Buttons *@
+                    <div style="display:flex; flex-direction:column; gap:3px;
+    opacity:@(Engine.TileMap.IsActive ? "1" : "0.4");
+    pointer-events:@(Engine.TileMap.IsActive ? "auto" : "none");">
+                        <div style="font-size:9px; color:#888; margin-bottom:1px;">MODE</div>
+
+                        @foreach (var mode in Enum.GetValues<TilePaintMode>())
+                        {
+                            bool modeActive = Engine.TileMap.PaintMode == mode;
+                            string modeLabel = mode switch
+                            {
+                                TilePaintMode.PaintMaterial => "?? Paint",
+                                TilePaintMode.RaiseTopology => "? Raise",
+                                TilePaintMode.LowerTopology => "? Lower",
+                                TilePaintMode.SmoothTopology => "? Smooth",
+                                TilePaintMode.FlattenTopology => "? Flatten",
+                                _ => mode.ToString()
+                            };
+
+                            <button @onclick="() => Engine.SetPaintMode(mode)"
+                            style="width:100%; padding:4px 2px; font-size:10px;
+                            font-family:'Courier New',monospace;
+                            background:@(modeActive ? "#1a6b3a" : "rgba(255,255,255,0.07)");
+                            color:@(modeActive ? "#7fff9a" : "#ccc");
+                            border:1px solid @(modeActive ? "#2ecc71" : "rgba(255,255,255,0.12)");
+                            border-radius:3px; cursor:pointer; text-align:left;">
+                                @modeLabel
+                            </button>
+                        }
+                    </div>
+
+                    @* ?? Brush Size ???????????????????????????????????????????????? *@
+                    <div style="display:flex; flex-direction:column; gap:3px;">
+                        <div style="font-size:9px; color:#888;">
+                            BRUSH  <span style="color:#fff; float:right;">@Engine.TileMap.BrushSize</span>
+                        </div>
+                        <input type="range" min="0" max="8" step="1"
+                        value="@Engine.TileMap.BrushSize"
+                        @oninput="e => Engine.SetBrushSize(int.Parse(e.Value!.ToString()!))"
+                        style="width:100%; accent-color:#2ecc71;" />
+                    </div>
+
+                    @* ?? Blend Strength — only in paint material mode *@
+                    @if (Engine.TileMap.PaintMode == TilePaintMode.PaintMaterial)
+                    {
+                        <div style="display:flex; flex-direction:column; gap:3px;">
+                            <div style="font-size:9px; color:#888;">
+                                BLEND
+                                <span style="color:#fff; float:right;">
+                                    @Engine.TileMap.BlendStrength.ToString("F2")
+                                </span>
+                            </div>
+                            <input type="range" min="0.0" max="1.0" step="0.05"
+                            value="@Engine.TileMap.BlendStrength"
+                            @oninput="e => Engine.SetBlendStrength(float.Parse(e.Value!.ToString()!))"
+                            style="width:100%; accent-color:#9b59b6;" />
+                            <div style="font-size:8px; color:#666; line-height:1.3;">
+                                blend zone<br />below paint
+                            </div>
+                        </div>
+                    }
+
+                    @* ?? Topology Strength — only in topology modes ???????????????? *@
+                    @if (Engine.TileMap.PaintMode != TilePaintMode.PaintMaterial)
+                    {
+                        <div style="display:flex; flex-direction:column; gap:3px;">
+                            <div style="font-size:9px; color:#888;">
+                                STRENGTH
+                                <span style="color:#fff; float:right;">
+                                    @Engine.TileMap.TopologyStrength.ToString("F2")
+                                </span>
+                            </div>
+                            <input type="range" min="0.05" max="1.0" step="0.05"
+                            value="@Engine.TileMap.TopologyStrength"
+                            @oninput="e => Engine.SetTopologyStrength(float.Parse(e.Value!.ToString()!))"
+                            style="width:100%; accent-color:#e67e22;" />
+                        </div>
+                    }
+
+                    @* ?? Flatten Target Height — only in flatten mode ?????????????? *@
+                    @if (Engine.TileMap.PaintMode == TilePaintMode.FlattenTopology)
+                    {
+                        <div style="display:flex; flex-direction:column; gap:3px;">
+                            <div style="font-size:9px; color:#888;">
+                                TARGET H
+                                <span style="color:#fff; float:right;">
+                                    @Engine.TileMap.FlattenTargetHeight.ToString("F1")
+                                </span>
+                            </div>
+                            <input type="range" min="-5" max="10" step="0.5"
+                            value="@Engine.TileMap.FlattenTargetHeight"
+                            @oninput="e => Engine.SetFlattenTarget(float.Parse(e.Value!.ToString()!))"
+                            style="width:100%; accent-color:#3498db;" />
+                        </div>
+                    }
+
+                    @* ?? Material Divider ?????????????????????????????????????????? *@
+                    <div style="font-size:9px; color:#888;
+                    border-top:1px solid rgba(255,255,255,0.12); padding-top:4px;">
+                        MATERIAL
+                    </div>
+
+                    @* ?? Texture Swatches ?????????????????????????????????????????? *@
+                    @for (int i = 0; i < SpectralXLandTileMap.TexturePaths.Length; i++)
+                    {
+                        int matIndex = i;
+                        bool isSelected = (int)Engine.TileMap.ActiveMaterial == matIndex;
+                        string texPath = SpectralXLandTileMap.TexturePaths[matIndex];
+                        string matName = SpectralXLandTileMap.MaterialNames[matIndex];
+
+                        <div @onclick="() => Engine.SetActiveMaterial((TileMaterial)matIndex)"
+                        style="cursor:pointer; border-radius:4px; overflow:hidden;
+                        border:2px solid @(isSelected ? "#2ecc71" : "rgba(255,255,255,0.15)");
+                        box-shadow:@(isSelected ? "0 0 6px #2ecc71" : "none");
+                        transition: border 0.1s;">
+
+                            <img src="@texPath" alt="@matName"
+                            style="width:100%; height:60px; object-fit:cover;
+                        display:block; image-rendering:pixelated;" />
+
+                            <div style="text-align:center; font-size:9px; padding:2px 0;
+                            background:rgba(0,0,0,0.6);
+                            color:@(isSelected ? "#7fff9a" : "#aaa");">
+                                @matName
+                            </div>
+                        </div>
+                    }
+
+                </div>
+            }
+        }
+        <button class="fullscreen-toggle" @onclick="ToggleViewport">
+            @ToggleIcon
+        </button>
+        @Debug.Output
+
+
+
+
+
+    </div>
+}
+
+
+
+
+
+
+

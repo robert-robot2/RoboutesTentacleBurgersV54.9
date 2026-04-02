@@ -1,0 +1,67 @@
+﻿
+@using RoboutesTentacleBurgers.Lighting;
+
+<div class="bloodwyrm-title">
+    Options<br />
+</div>
+
+<div class="bloodwyrm-subtitletext2">
+    Beware of Cows....<br />
+    Try to Defeat the Evil....<br />
+    Cain spoke in the wind of rumors of a town to the west in construction...<br/>
+    You Must eat Cheese to Survive The Horror...<br/>
+    Map Coords As follow Planet, X, Y, Z...<br/>
+    Refresh Browser to Fully Reset<br />
+</div>
+
+<div class="bloodwyrm-subtitletoggle">
+    <input type="checkbox" @bind="IsDayNightCyclePaused" />
+    Pause Day/Night Cycle
+</div>
+
+<div class="bloodwyrm-subtitletoggle2">
+    <label>
+        Day/Night Cycle Duration (minutes):
+        <input type="range" min="2" max="1440" step="1" @bind="SelectedCycleDuration" />
+        @($"{SelectedCycleDuration} min")
+    </label>
+</div>
+
+
+<button class="glow-button4" @onclick="OnRMainMenuPressed">Main Menu</button>
+
+@code {
+    [Parameter] public EventCallback OnRMainMenu { get; set; }
+
+
+    [Parameter] public ILighting Lighting { get; set; } = default!;
+
+
+    private bool IsDayNightCyclePaused
+    {
+        get => Lighting.LightingIsPaused;
+        set
+        {
+
+            Lighting.LightingIsPaused = value;
+        }
+    }
+
+    private int SelectedCycleDuration
+    {
+        get => Lighting.LightingCycleDurationMinutes;
+        set
+        {
+
+            Lighting.LightingCycleDurationMinutes = value;
+        }
+    }
+
+
+ 
+
+    private async Task OnRMainMenuPressed()
+    {
+        await OnRMainMenu.InvokeAsync();
+    }
+}

@@ -1,0 +1,66 @@
+﻿
+
+<div class="DiabloBlueGlow" style="font-size:150%">SpectralXA</div>
+<div class="DiabloBlueGlow" style="font-size:150%">FullScreen Toggle on lower right Viewport hover and Vice Versa</div>
+<div class="DiabloBlueGlow" style="font-size:150%">Press 3 to show Debug</div>
+<div class="DiabloBlueGlow" style="font-size:150%">WASD for Camera Movement</div>
+<div class="DiabloBlueGlow" style="font-size:150%">Hybrid C# HTML VIewport with SVG Viewport HUD</div>
+<div class="DiabloBlueGlow" style="font-size:150%">Project in testing phase needs to be rebuilt</div>
+
+
+@using SpectralXAXA.SpectralXComponent;
+
+<!-- this is our viewport-->
+<div id="SpectralX-Viewport"
+     class="SpectralX-Viewport"
+     style="@Viewport.Style"
+     tabindex="0"
+     @onkeydown="Input.HandleKeyDown">
+
+    <SpectralXDebugRender Input="Input" Engine="Engine" Camera="Camera" Viewport="Viewport"SVGViewport="SVGViewport" Renderer="Renderer"Scene="Scene" MeshLibrary="MeshLibrary"/>
+
+
+
+    @((MarkupString)Scene2.Render())
+
+
+
+    <button class="fullscreen-toggle" @onclick="ToggleViewport">
+        @ToggleIcon
+    </button>
+
+    <!--Example of where our Cube.fbx would be but this is after a fullrestructur emutation, so elts try to call our cube.fbx as is somehow-->
+    @*@foreach (var Registry in meshregistry.CubeMesh.All)
+    {var obj in CubeMesh
+            <div style="@obj.MeshStyle"></div>
+            which currently SpectralXmesh SHould kind of be our First Cube mesh to display in our numerics vewport
+        // ← CSS 3D transforms
+    }
+ *@
+
+ 
+    @if (SVGViewport.RenderedTriangles.Count > 0)
+    {
+        <svg width="@SVGViewport.SVGViewportWidth" height="@SVGViewport.SVGViewportHeight"
+             style="position:absolute; bottom:0; left:0; pointer-events:none;z-index:10000">
+
+
+
+            @foreach (var tri in SVGViewport.RenderedTriangles)
+            {
+                <polygon points="@($"{tri.P0.X},{tri.P0.Y} {tri.P1.X},{tri.P1.Y} {tri.P2.X},{tri.P2.Y}")"
+                         fill="rgba(100,150,255,0.5)"
+                         stroke="cyan"
+                         stroke-width="1" />
+            }
+        </svg>
+    }
+   
+</div>
+
+
+
+
+
+
+

@@ -1,0 +1,127 @@
+﻿
+
+<!-- Debug -->
+
+<BloodDebugRender CharacterHandle="CharacterHandle" EnemyHandle="EnemyHandle" />
+
+<!-- Lighting -->
+
+<BloodLightRender Lighting="Lighting" />
+
+<!-- Weather -->
+
+<BloodWeatherRender Weather="Weather" />
+
+<!-- Characters -->
+
+<BloodCharRender CharacterHandle="CharacterHandle" />
+
+<!-- Enemy   -->
+
+<BloodEnemyRender EnemyHandle="EnemyHandle" />
+
+<!-- Static Objects-->
+
+<BloodStaticRender StaticHandle="StaticHandle" />
+
+<!-- Dynamic Objects -->
+
+<BloodDynORender DynOHandle="DynOHandle" />
+
+<!-- Breakable Objects -->
+
+<BloodBreakRender BreakHandle="BreakHandle" />
+
+<!-- Physics Objects -->
+
+<BloodPhysicsRender PhysicsHandle="PhysicsHandle" />
+
+@code{
+
+    // Composite wrapper parameter (pass from page: allHandle="allhandles")
+    [Parameter] public RoboutesTentacleBurgers.Services.BloodAllHandle? allHandle { get; set; }
+
+    // Light
+    [Parameter] public BloodLightHandle? LightHandle { get; set; }
+    public ILighting? Lighting => LightHandle?.Lighting;
+
+    // Weather
+    [Parameter] public BloodWeatherHandle? WeatherHandle { get; set; }
+    public IWeather? Weather => WeatherHandle?.Weather;
+
+    // Static
+    [Parameter] public BloodStaticHandle? StaticHandle { get; set; }
+    public IStatic? ActiveStatic => StaticHandle?.ActiveStatic;
+
+    // Character (already parameterized)
+    [Parameter] public BloodCharacterHandle? CharacterHandle { get; set; }
+    public IBloodiCharacter? ActiveCharacter => CharacterHandle?.ActiveCharacter;
+
+    // Enemy
+    [Parameter] public BloodEnemyHandle? EnemyHandle { get; set; }
+    public IiEnemy? ActiveEnemy => EnemyHandle?.ActiveEnemy;
+
+    // Dynamic Object
+    [Parameter] public BloodDynOHandle? DynOHandle { get; set; }
+    public IDynamicO? ActiveDynO => DynOHandle?.ActiveDynO;
+
+    // Breakables
+    [Parameter] public BloodBreakHandle? BreakHandle { get; set; }
+    public IBreakables? Breakables => BreakHandle?.Breakables;
+
+    // Physics
+    [Parameter] public BloodPhysicsHandle? PhysicsHandle { get; set; }
+    public IPhysics? Physics => PhysicsHandle?.Physics;
+
+    // Map composite -> individual handles when provided; otherwise ensure individual defaults.
+    protected override void OnParametersSet()
+    {
+        if (allHandle != null)
+        {
+            allHandle.EnsureDefaults();
+
+            LightHandle     = allHandle.LightHandle;
+            WeatherHandle   = allHandle.WeatherHandle;
+            StaticHandle    = allHandle.StaticHandle;
+            CharacterHandle = allHandle.CharacterHandle;
+            EnemyHandle     = allHandle.EnemyHandle;
+            DynOHandle      = allHandle.DynOHandle;
+            BreakHandle     = allHandle.BreakHandle;
+            PhysicsHandle   = allHandle.PhysicsHandle;
+        }
+        else
+        {
+            LightHandle     ??= new BloodLightHandle();
+            WeatherHandle   ??= new BloodWeatherHandle();
+            StaticHandle    ??= new BloodStaticHandle();
+            CharacterHandle ??= new BloodCharacterHandle();
+            EnemyHandle     ??= new BloodEnemyHandle();
+            DynOHandle      ??= new BloodDynOHandle();
+            BreakHandle     ??= new BloodBreakHandle();
+            PhysicsHandle   ??= new BloodPhysicsHandle();
+        }
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

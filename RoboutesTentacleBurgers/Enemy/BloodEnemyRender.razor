@@ -1,0 +1,71 @@
+﻿
+
+
+
+
+
+@foreach (var registry in BloodEnemyHandle.AllRegistries)
+{
+    foreach (var enemy in registry)
+    {
+        var isActive = ActiveEnemy != null && ReferenceEquals(enemy, ActiveEnemy);
+
+        if (enemy.EnemyIsAlive)
+        {
+            <div style=@($"{enemy.SpriteStyle}" +
+                      (!string.IsNullOrEmpty(enemy.HitEffectPath)
+                      ? " filter:brightness(150%) saturate(200%);"
+                      : ""))></div>
+
+            @if (!string.IsNullOrEmpty(enemy.HitEffectPath))
+            {
+                <img src="@enemy.HitEffectPath"
+                     style=@($"position:absolute; left:{enemy.EnemyX}px; top:{enemy.EnemyY}px; z-index:80;") />
+            }
+            @foreach (var puddle in BloodSplatterRegistry.All)
+            {
+                <img src="@puddle.Path"
+                     style="position:absolute; left:@puddle.Xpx; top:@puddle.Ypx; width:@puddle.Widthpx; height:@puddle.Heightpx; z-index:40;" />
+            }
+
+        }
+      
+        
+        
+        
+        else
+        {
+            <img src="/iAssets/SkeleCooked01.png"
+                 style=@($"position:absolute; left:{enemy.EnemyX}px; top:{enemy.EnemyY}px; opacity:0.4; filter:grayscale(100%);z-index:80;") />
+        }
+
+
+
+
+
+    }
+}
+
+
+
+@code {
+    // Accept the parent's handle; do not 'new' here; must have public setter
+    [Parameter] public BloodEnemyHandle? EnemyHandle { get; set; }
+
+    public IiEnemy? ActiveEnemy => EnemyHandle?.ActiveEnemy;
+
+  
+   
+
+}
+
+
+
+
+
+
+
+
+
+
+
