@@ -1,7 +1,5 @@
 # Roboutes Tentacle Burgers Version 54.9
 
-A professional Windows Forms utility for cleaning `bin` and `obj` folders from .NET projects.
-
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)
